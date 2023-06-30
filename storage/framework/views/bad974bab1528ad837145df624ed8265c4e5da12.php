@@ -1,0 +1,1 @@
+Your token: <?php echo $user->email_verification_token; ?><?php /**PATH C:\xampp\htdocs\DuckybankBackEnd\resources\views/emails/user-email-verification.blade.php ENDPATH**/ ?>

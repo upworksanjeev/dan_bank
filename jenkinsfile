@@ -1,0 +1,76 @@
+def commitContainsSkip = 0
+
+pipeline {
+
+   environment {
+        shouldBuild = "true"
+     
+    }
+
+  agent {
+        label 'Public_Cloud'
+      }
+
+  
+  options {
+    // Stop the build early in case of compile or test failures
+    skipStagesAfterUnstable()
+  }
+  stages {
+    
+    stage('Status') {
+            steps {
+                script {
+                    commitContainsSkip = sh(script: "git log -1 | grep '.*\\[start ci\\].*'", returnStatus: true)
+                  }
+                  sh "echo $commitContainsSkip"
+                 
+            }
+        }
+
+    stage('File Transfer') {
+    // when {
+    //      expression { commitContainsSkip == 0 }
+    // }ocker
+      agent {
+        docker {
+         args '-u root:root'
+         image 'mtayyabq/angular_build:2.0'
+         reuseNode true
+       }
+    }
+      steps {       
+       sh "apt update && apt-get install ssh -y"
+        sshagent(credentials: ['duckyBankServer']) {
+              sh '''
+               [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
+              ssh-keyscan -t rsa,dsa 52.54.209.43 >> ~/.ssh/known_hosts
+              ssh -oStrictHostKeyChecking=no ubuntu@52.54.209.43
+              '''
+              //ssh -oStrictHostKeyChecking=no ubuntu@52.54.209.43
+              //
+                sh 'echo working'
+            sh 'scp -r /mnt/disk/Jenkins/workspace/Laravel/DuckyBanBackendDeployment/* ubuntu@52.54.209.43:/var/www/duckyBankBanckendcicd/'
+            sh ''' ssh ubuntu@52.54.209.43 "cd /var/www/duckyBankBanckendcicd && ls " ''' 
+                
+                    
+               }
+        sh "echo Done"
+      }
+      
+    }
+    stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+  }
+ // post {
+    //failure {
+      // Notify developer team of the failure
+     // mail to: 'tayyabqamrani@codesorbit.com', subject: 'Oops! HRM_Build Fail', body: "Build ${env.BUILD_NUMBER} failed; ${env.BUILD_URL}"
+    //}
+ // }
+        
+}

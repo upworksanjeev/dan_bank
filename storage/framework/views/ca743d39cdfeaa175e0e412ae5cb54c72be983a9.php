@@ -1,0 +1,1 @@
+Your token: <?php echo $user->password_verification_token; ?><?php /**PATH C:\xampp\htdocs\DuckybankBackEnd\resources\views/emails/user-reset-password-mail.blade.php ENDPATH**/ ?>
